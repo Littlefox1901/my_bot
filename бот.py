@@ -1,5 +1,6 @@
 import random
-
+import bs4
+import requests
 import telebot
 from telebot import types
 
@@ -9,24 +10,16 @@ second = ["Сейчас удачное время для признания в �
 second_2 = ["Приготовьтесь, что получаемые вами результаты, успех в делах и яркие отношения с любимыми могут стать предметом зависти","Невозможно отвести глаз от твоей красоты!"]
 third = ["Невозможно отвести глаз от твоей красоты!","Больше нет таких умных и проницательных девушек."]
 
-@bot.message_handler(commands=["start"])
-def start(message, res=False):
-    chat_id = message.chat.id
-
-    bot.send_message(chat_id,
-                     text="Привет, {0.first_name}! Я тестовый бот для курса программирования на языке ПаЙтон".format(
-                         message.from_user))
-
 
 # ----------------------------------------------------------------------
 @bot.message_handler(commands=["start"])
-def get_text_messages(message):
-    if message.text == "привет" or "Привет":
+def start(message, res=False):
         markup = types.ReplyKeyboardMarkup(resize_keyboard= True)
         item1 = types.KeyboardButton('Об авторе')
         item2 = types.KeyboardButton('Гороскоп')
         item3 = types.KeyboardButton('Анекдоты')
-        markup.add(item1,item2,item3)
+        item4 = types.KeyboardButton('Показать китю')
+        markup.add(item1,item2,item3,item4)
         bot.send_message(message.chat.id, 'Привет,{0.first_name}!'.format(message.from_user), reply_markup=markup)
 
 @bot.message_handler(content_types=['text'])
@@ -61,36 +54,32 @@ def get_text_messages(message):
             keyboard.add(key_ryby)
             bot.send_message(message.from_user.id, text='Выбери свой знак зодиака', reply_markup=keyboard)
 
-        @bot.callback_query_handler(func=lambda call: True)
-        def callback_worker(call):
-            if call.data == "zodiac":
-                msg = random.choice(first) + ' ' + random.choice(second) + ' ' + random.choice(second_2) + ' ' + random.choice(third)
-                bot.send_message(message.chat.id, msg,)
+            @bot.callback_query_handler(func=lambda call: True)
+            def callback_worker(call):
+                if call.data == "zodiac":
+                    msg = random.choice(first) + ' ' + random.choice(second) + ' ' + random.choice(second_2) + ' ' + random.choice(third)
+                    bot.send_message(message.chat.id, msg,)
 
-    elif message.text == 'Об авторе':
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            item1 = types.KeyboardButton('жизнь')
-            item2 = types.KeyboardButton('увлечения')
-            item3 = types.KeyboardButton('сколько лет')
-            back = types.KeyboardButton('Назад')
-            markup.add(item1, item2, item3, back)
-            bot.send_message(message.chat.id, 'Об авторе', reply_markup=markup)
-    elif message.text == 'Анекдоты':
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        item1 = types.KeyboardButton('18+')
-        item2 = types.KeyboardButton('Бытовые')
-        back = types.KeyboardButton('Назад')
-        markup.add(item1, item2,back)
-        bot.send_message(message.chat.id, 'Анекдоты', reply_markup=markup)
-    elif message.text == 'Назад':
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        item1 = types.KeyboardButton('Об авторе')
-        item2 = types.KeyboardButton('Гороскоп')
-        item3 = types.KeyboardButton('Анекдоты')
-        markup.add(item1, item2, item3)
-        bot.send_message(message.chat.id, 'Назад', reply_markup=markup)
+        elif message.text == "Об авторе":
+            bot.send_message(message.chat.id, 'Привет,  меня зовут Катя. Мне 19 лет. Я учусь в Питере на специальности "Создание цифрового контента"',)
+        elif message.text == "Анекдоты":
+            bot.send_message(message.chat.id, text=get_anekdot())
+        elif message.text == "Показать китю":
+            contents = requests.get('https://aws.random.cat/meow').json()
+            urlCAT = contents['file']
+            bot.send_photo(message.chat.id, photo=urlCAT, caption="Китя")
+
+
 
 # -----------------------------------------------------------------------
+def get_anekdot():
+    array_anekdots = []
+    req_anek = requests.get('http://anekdotme.ru/random')
+    soup = bs4.BeautifulSoup(req_anek.text, "html.parser")
+    result_find = soup.select('.anekdot_text')
+    for result in result_find:
+        array_anekdots.append(result.getText().strip())
+    return array_anekdots[0]
 bot.polling(none_stop=True, interval=0) # Запускаем бота
 
 print()
