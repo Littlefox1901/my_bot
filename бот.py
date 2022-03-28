@@ -15,10 +15,10 @@ third = ["Невозможно отвести глаз от твоей крас�
 @bot.message_handler(commands=["start"])
 def start(message, res=False):
         markup = types.ReplyKeyboardMarkup(resize_keyboard= True)
-        item1 = types.KeyboardButton('Об авторе')
+        item1 = types.KeyboardButton('Создай свой ник')
         item2 = types.KeyboardButton('Гороскоп')
         item3 = types.KeyboardButton('Анекдоты')
-        item4 = types.KeyboardButton('Показать китю')
+        item4 = types.KeyboardButton('Показать лисичку')
         markup.add(item1,item2,item3,item4)
         bot.send_message(message.chat.id, 'Привет,{0.first_name}!'.format(message.from_user), reply_markup=markup)
 
@@ -60,14 +60,15 @@ def get_text_messages(message):
                     msg = random.choice(first) + ' ' + random.choice(second) + ' ' + random.choice(second_2) + ' ' + random.choice(third)
                     bot.send_message(message.chat.id, msg,)
 
-        elif message.text == "Об авторе":
-            bot.send_message(message.chat.id, 'Привет,  меня зовут Катя. Мне 19 лет. Я учусь в Питере на специальности "Создание цифрового контента"',)
+
+        elif message.text == "Создай свой ник":
+            bot.send_message(message.chat.id, text=get_nickname())
         elif message.text == "Анекдоты":
             bot.send_message(message.chat.id, text=get_anekdot())
-        elif message.text == "Показать китю":
-            contents = requests.get('https://aws.random.cat/meow').json()
-            urlCAT = contents['file']
-            bot.send_photo(message.chat.id, photo=urlCAT, caption="Китя")
+        elif message.text == "Показать лисичку":
+            contents = requests.get('https://randomfox.ca/floof').json()
+            urlCAT = contents['image']
+            bot.send_photo(message.chat.id, photo=urlCAT)
 
 
 
@@ -80,7 +81,17 @@ def get_anekdot():
     for result in result_find:
         array_anekdots.append(result.getText().strip())
     return array_anekdots[0]
-bot.polling(none_stop=True, interval=0) # Запускаем бота
+bot.polling(none_stop=True, interval=0)
+
+def get_nickname():
+    array_names = []
+    req_names = requests.get("https://ru.nickfinder.com")
+    soup = bs4.BeautifulSoup(req_names.text, "html.parser")
+    result_find = soup.findAll(class_='one_generated_variant vt_df_bg')
+    for result in result_find:
+        array_names.append(result.getText())
+    return array_names[0]
+bot.polling(none_stop=True, interval=0)
 
 print()
 
